@@ -32,6 +32,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -48,7 +49,7 @@ import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef.HWND;
 
 public class Main {
-  private static final int    CHECK_CYCLE_SECONDS = 10;
+  private final static int    CHECK_CYCLE_SECONDS = 15;
   private final static String TITLE_CMD           = "VPN Autoconnect 1.0 for Cisco AnyConnect";
   private final static String VPNCLI_CMD          = "vpncli.exe";
 
@@ -97,9 +98,9 @@ public class Main {
     pnl.setPreferredSize(new Dimension(100, 80));
     frm.setContentPane(pnl);
     frm.pack();
-    Main.updateCtrl();
     frm.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
     frm.setVisible(true);
+    Main.updateCtrl();
   }
 
   static void updateCtrl() {
@@ -135,10 +136,6 @@ public class Main {
       // silent
     }
 
-    // RuntimeHelper.SILENT = true;
-    ConnectHelper.execAndWaitCommand("taskkill /f /im \"" + Main.VPNCLI_CMD + "\" /t");
-    ConnectHelper.execAndWaitCommand("taskkill /f /im \"vpnui.exe\" /t");
-
     String host = this.cfg.getProperty("host");
     String user = this.cfg.getProperty("user");
     String password = this.cfg.getProperty("password");
@@ -159,10 +156,17 @@ public class Main {
         // JOptionPane.showMessageDialog(null, "没有找到vpn-autoconnect.Ptpl！", Main.TITLE, JOptionPane.ERROR_MESSAGE);
         // System.exit(-3);
         // }
+        ConnectHelper.execAndWaitCommand("taskkill /f /im \"" + Main.VPNCLI_CMD + "\" /t");
+        ConnectHelper.execAndWaitCommand("taskkill /f /im \"vpnui.exe\" /t");
+        boolean first = true;
         while (true) {
           while (true) {
             ConnectHelper.execAndWaitCommand("\"" + cmd.getAbsolutePath() + "\" status");
             if (ConnectHelper.isConnected()) {
+              if (first) {
+                first = false;
+                ConnectHelper.execAndWaitCommand("\"" + cmd.getParentFile().getAbsolutePath() + "/vpnui.exe" + "\"");
+              }
               TimeUnit.SECONDS.sleep(Main.CHECK_CYCLE_SECONDS);
             } else {
               TimeUnit.SECONDS.sleep(1);
@@ -172,6 +176,9 @@ public class Main {
           // System.out.println("运行：" + scriptFile.getAbsolutePath());
           // ConnectHelper.execAndWaitCommand("powershell -PSConsoleFile \"" + scriptFile.getAbsolutePath() + "\"");
           // TimeUnit.SECONDS.sleep(30);
+
+          ConnectHelper.execAndWaitCommand("taskkill /f /im \"" + Main.VPNCLI_CMD + "\" /t");
+          ConnectHelper.execAndWaitCommand("taskkill /f /im \"vpnui.exe\" /t");
           final File statusFile = File.createTempFile("vpn-autoconnect", ".out");
           if (ConnectHelper.DEBUG) {
             System.out.println("status: " + statusFile.getAbsolutePath());
@@ -218,6 +225,9 @@ public class Main {
               }
             }
             ConnectHelper.destroy();
+            if (Status.Connected == ConnectHelper.getStatus()) {
+              ConnectHelper.execAndWaitCommand("\"" + cmd.getParentFile().getAbsolutePath() + "/vpnui.exe" + "\"");
+            }
           } catch (Exception e) {
             e.printStackTrace();
           } finally {
@@ -280,7 +290,9 @@ public class Main {
           main.start();
         }
       }.start();
-      Main.showWindow();
+      if (Arrays.toString(args).contains("--status")) {
+        Main.showWindow();
+      }
     }
   }
 }

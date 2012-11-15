@@ -3,6 +3,8 @@ package cn.kk.autovpn;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
@@ -14,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -33,7 +36,7 @@ public class ConfigDialog extends JDialog {
     this.setTitle("VPN设置");
     this.setLocationRelativeTo(null);
     this.cfgFile = cfgFile;
-    JPanel pnl = new JPanel(new GridLayout(3, 2, 6, 6));
+    JPanel pnl = new JPanel(new GridLayout(4, 2, 6, 6));
     pnl.setBorder(new EmptyBorder(6, 6, 6, 6));
     pnl.add(new JLabel("服务器网址"));
     pnl.add(this.itmHost);
@@ -41,18 +44,28 @@ public class ConfigDialog extends JDialog {
     pnl.add(this.itmUser);
     pnl.add(new JLabel("密码"));
     pnl.add(this.itmPassword);
+    pnl.add(new JLabel(""));
+    JButton btn = new JButton("保存");
+    pnl.add(btn);
     pnl.setPreferredSize(new Dimension(300, 100));
     this.setContentPane(pnl);
     this.setResizable(false);
     this.setModalityType(ModalityType.APPLICATION_MODAL);
     this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-    this.addWindowListener(new WindowAdapter() {
+    btn.addActionListener(new ActionListener() {
       @Override
-      public void windowClosing(WindowEvent e) {
+      public void actionPerformed(ActionEvent e) {
         if (ConfigDialog.this.check()) {
           ConfigDialog.this.setVisible(false);
           ConfigDialog.this.dispose();
         }
+      }
+    });
+    this.addWindowListener(new WindowAdapter() {
+      @Override
+      public void windowClosing(WindowEvent e) {
+        ConfigDialog.this.setVisible(false);
+        ConfigDialog.this.dispose();
       }
     });
     InputStream in = new FileInputStream(cfgFile);
@@ -90,19 +103,19 @@ public class ConfigDialog extends JDialog {
     boolean validPassword = ConnectHelper.isValidCfgValue(password);
 
     if (!validUser) {
-      this.itmUser.setBackground(Color.RED);
+      this.itmUser.setBackground(Color.RED.brighter());
     } else {
       this.itmUser.setBackground(Color.WHITE);
     }
 
     if (!validHost) {
-      this.itmHost.setBackground(Color.RED);
+      this.itmHost.setBackground(Color.RED.brighter());
     } else {
       this.itmHost.setBackground(Color.WHITE);
     }
 
     if (!validPassword) {
-      this.itmPassword.setBackground(Color.RED);
+      this.itmPassword.setBackground(Color.RED.brighter());
     } else {
       this.itmPassword.setBackground(Color.WHITE);
     }

@@ -188,7 +188,7 @@ public final class ConnectHelper {
       System.out.println(cmd);
     }
 
-    ConnectHelper.setStatus(Status.Preparing);
+    // ConnectHelper.setStatus(Status.Preparing);
     if (in != null) {
       new Thread() {
         @Override
